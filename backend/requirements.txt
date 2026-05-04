@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-multipart
+openai-whisper
+transformers
+torch
+sentencepiece
+spacy
+nltk
+pydub
+soundfile
+python-docx
+fpdf2
+pydantic
+aiofiles
