@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException
+import asyncio
 from models.schemas import SummarizeRequest, SummarizeResponse
 
 router = APIRouter()
@@ -7,7 +8,9 @@ router = APIRouter()
 async def summarize_transcript(request: Request, body: SummarizeRequest):
     try:
         summarizer = request.app.state.summarizer
-        result = summarizer.summarize(body.transcript, body.summary_length)
+        result = await asyncio.to_thread(
+            summarizer.summarize, body.transcript, body.summary_length
+        )
         return SummarizeResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

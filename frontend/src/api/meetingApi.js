@@ -6,9 +6,8 @@ export const transcribeAudio = async ({ file, modelSize, language }) => {
   formData.append('model_size', modelSize)
   if (language) formData.append('language', language)
 
-  const { data } = await apiClient.post('/transcribe', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  // Let axios set Content-Type with the correct multipart boundary
+  const { data } = await apiClient.post('/transcribe', formData)
   return data
 }
 

@@ -10,10 +10,8 @@ An intelligent system that converts meeting audio into structured summaries, key
 ## Prerequisites
 - **Node.js 18+**
 - **Python 3.10+**
-- **ffmpeg** (Essential for audio processing)
-  - Windows: `choco install ffmpeg`
-  - Mac: `brew install ffmpeg`
-  - Linux: `sudo apt install ffmpeg`
+- **ffmpeg** (Essential for audio processing; bundled via `static-ffmpeg` when you `pip install -r requirements.txt`)
+  - Alternatively install system-wide: Windows `choco install ffmpeg`, Mac `brew install ffmpeg`, Linux `sudo apt install ffmpeg`
 
 ## Installation & Setup
 
@@ -23,7 +21,9 @@ cd backend
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python -m spacy download en_core_web_sm
+cp .env.example .env   # Windows: copy .env.example .env
+# Add your OPENAI_API_KEY to .env (uses OpenAI Whisper + GPT when set)
+python -m spacy download en_core_web_sm  # only needed for local (non-OpenAI) mode
 uvicorn main:app --reload --port 8000
 ```
 

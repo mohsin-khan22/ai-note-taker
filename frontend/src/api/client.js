@@ -1,7 +1,8 @@
 import axios from 'axios'
 
+// Use Vite dev proxy (/api -> localhost:8000) to avoid CORS; override via .env for production
 export const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
   timeout: 300000, // 5 minutes for slow transcriptions
 })
 

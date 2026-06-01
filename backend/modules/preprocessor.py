@@ -3,10 +3,11 @@ import nltk
 from nltk.tokenize import sent_tokenize
 
 # Download necessary NLTK data
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
+for _resource in ("punkt", "punkt_tab"):
+    try:
+        nltk.data.find(f"tokenizers/{_resource}")
+    except LookupError:
+        nltk.download(_resource)
 
 def clean_transcript(text: str) -> str:
     """Cleans and formats the raw transcript text."""

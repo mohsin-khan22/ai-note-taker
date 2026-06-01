@@ -1,16 +1,16 @@
 import spacy
-from transformers import pipeline
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 import torch
 
 class MeetingSummarizer:
     def __init__(self):
-        self.device = 0 if torch.cuda.is_available() else -1
-        # Load BART summarizer
-        self.summarizer = pipeline(
-            "summarization", 
-            model="facebook/bart-large-cnn", 
-            device=self.device
-        )
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        model_name = "facebook/bart-large-cnn"
+        
+        print(f"Loading summarization model: {model_name}...")
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(self.device)
+        
         # Load spaCy for NER
         try:
             self.nlp = spacy.load("en_core_web_sm")
@@ -21,7 +21,6 @@ class MeetingSummarizer:
 
     def summarize(self, transcript: str, summary_length: str):
         """Generates summary, key points, and action items."""
-        # Map length to tokens
         length_map = {
             "short": (50, 100),
             "medium": (100, 250),
@@ -29,16 +28,24 @@ class MeetingSummarizer:
         }
         min_len, max_len = length_map.get(summary_length, (100, 250))
 
-        # Chunk transcript if too long (BART limit is ~1024 tokens)
-        # For simplicity, we chunk by characters (roughly 4 chars per token)
+        # Chunking logic
         max_chunk = 3000 
         chunks = [transcript[i:i + max_chunk] for i in range(0, len(transcript), max_chunk)]
         
         summaries = []
         for chunk in chunks:
-            if len(chunk.split()) < 30: continue # Skip tiny chunks
-            res = self.summarizer(chunk, max_length=max_len, min_length=min_len, do_sample=False)
-            summaries.append(res[0]['summary_text'])
+            if len(chunk.split()) < 30: continue
+            
+            inputs = self.tokenizer([chunk], max_length=1024, return_tensors="pt", truncation=True).to(self.device)
+            summary_ids = self.model.generate(
+                inputs["input_ids"], 
+                num_beams=4, 
+                min_length=min_len, 
+                max_length=max_len, 
+                early_stopping=True
+            )
+            summary = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+            summaries.append(summary)
         
         final_summary = " ".join(summaries)
         

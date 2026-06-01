@@ -1,6 +1,8 @@
 fastapi
 uvicorn[standard]
 python-multipart
+openai
+python-dotenv
 openai-whisper
 transformers
 torch
@@ -8,6 +10,7 @@ sentencepiece
 spacy
 nltk
 pydub
+static-ffmpeg
 soundfile
 python-docx
 fpdf2
