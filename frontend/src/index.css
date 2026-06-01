@@ -6,10 +6,19 @@
   color-scheme: dark;
 }
 
+html.light {
+  color-scheme: light;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  @apply bg-background text-white transition-colors duration-200;
+}
+
+html.light body {
+  @apply text-slate-900;
 }
 
 @layer base {
@@ -33,6 +42,35 @@ body {
   }
 }
 
+html.light .card {
+  @apply bg-white border-slate-200 shadow-md;
+}
+
+html.light .btn-outline {
+  @apply text-slate-700 hover:bg-slate-100;
+}
+
+html.light .text-white {
+  @apply text-slate-900;
+}
+
+html.light .text-slate-200,
+html.light .text-slate-300 {
+  @apply text-slate-600;
+}
+
+html.light .text-muted {
+  @apply text-slate-500;
+}
+
+html.light .bg-background {
+  @apply bg-slate-50;
+}
+
+html.light nav {
+  @apply bg-white/90 border-slate-200;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -42,4 +80,8 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   @apply bg-border rounded-full hover:bg-muted/50 transition-colors;
+}
+
+html.light ::-webkit-scrollbar-track {
+  @apply bg-slate-100;
 }

@@ -19,8 +19,15 @@ class MeetingSummarizer:
             os.system("python -m spacy download en_core_web_sm")
             self.nlp = spacy.load("en_core_web_sm")
 
-    def summarize(self, transcript: str, summary_length: str):
+    def summarize(
+        self,
+        transcript: str,
+        summary_length: str,
+        summary_type: str = "general",
+        instructions: str | None = None,
+    ):
         """Generates summary, key points, and action items."""
+        _ = summary_type, instructions
         length_map = {
             "short": (50, 100),
             "medium": (100, 250),

@@ -1,20 +1,30 @@
 import React from 'react'
-import { FileText, FileJson, FileType, Download } from 'lucide-react'
+import { FileText, FileType, Download } from 'lucide-react'
 import { useExport } from '../hooks/useExport'
+import { useToast } from '../context/ToastContext'
+import { actionItemsForExport } from '../utils/meetingHelpers'
 
 const ExportPanel = ({ data }) => {
   const { mutate: exportFile, isPending } = useExport()
+  const { toast } = useToast()
 
   const handleExport = (format) => {
-    exportFile({
-      format,
-      title: data.title,
-      date: new Date().toLocaleDateString(),
-      transcript: data.transcript,
-      summary: data.summary,
-      key_points: data.keyPoints,
-      action_items: data.actionItems
-    })
+    exportFile(
+      {
+        format,
+        title: data.title,
+        date: new Date().toLocaleDateString(),
+        transcript: data.transcript,
+        summary: data.summary,
+        key_points: data.keyPoints,
+        action_items: actionItemsForExport(data.actionItems),
+        entities: data.entities,
+      },
+      {
+        onSuccess: () => toast('Export downloaded successfully', 'success'),
+        onError: (err) => toast(err.message || 'Export failed', 'error'),
+      }
+    )
   }
 
   const formats = [
@@ -29,7 +39,7 @@ const ExportPanel = ({ data }) => {
         <Download className="w-6 h-6 text-primary" />
         <h2 className="text-xl font-bold">Export Results</h2>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {formats.map((fmt) => (
           <button
@@ -38,12 +48,14 @@ const ExportPanel = ({ data }) => {
             disabled={isPending}
             className="flex flex-col items-center justify-center p-6 rounded-xl border border-border bg-background/50 hover:bg-primary/5 hover:border-primary/50 transition-all group disabled:opacity-50"
           >
-            <fmt.icon className={`w-10 h-10 mb-3 transition-transform group-hover:scale-110 ${fmt.color}`} />
+            <fmt.icon
+              className={`w-10 h-10 mb-3 transition-transform group-hover:scale-110 ${fmt.color}`}
+            />
             <span className="text-sm font-semibold">{fmt.label}</span>
           </button>
         ))}
       </div>
-      
+
       {isPending && (
         <div className="text-center text-sm text-muted animate-pulse">
           Generating file, please wait...

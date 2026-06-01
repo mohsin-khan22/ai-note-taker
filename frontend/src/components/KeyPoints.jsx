@@ -1,4 +1,5 @@
 import React from 'react'
+import { motion } from 'framer-motion'
 import { ListChecks } from 'lucide-react'
 
 const KeyPoints = ({ points }) => {
@@ -10,10 +11,16 @@ const KeyPoints = ({ points }) => {
       </div>
       <ul className="space-y-3">
         {points.map((point, i) => (
-          <li key={i} className="flex gap-3 text-slate-300">
+          <motion.li
+            key={i}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.08 }}
+            className="flex gap-3 text-slate-300"
+          >
             <span className="text-secondary font-bold">•</span>
             <span>{point}</span>
-          </li>
+          </motion.li>
         ))}
       </ul>
     </div>

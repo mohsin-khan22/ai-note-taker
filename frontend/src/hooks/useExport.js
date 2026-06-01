@@ -16,9 +16,5 @@ export const useExport = () => {
       link.remove()
       window.URL.revokeObjectURL(url)
     },
-    onError: (error) => {
-      console.error('Export failed:', error)
-      alert('Export failed: ' + error.message)
-    },
   })
 }

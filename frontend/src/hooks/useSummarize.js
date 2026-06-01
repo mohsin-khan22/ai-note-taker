@@ -10,15 +10,16 @@ export const useSummarize = () => {
   return useMutation({
     mutationFn: summarizeTranscript,
     onMutate: () => {
-      setCurrentStep(3) // Summarizing
+      setErrorMessage(null)
+      setCurrentStep(3)
     },
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.summary.all, data)
-      setCurrentStep(4) // Completed
+      setCurrentStep(4)
     },
     onError: (error) => {
       setErrorMessage(error.message)
-      setCurrentStep(2) // Back to transcription result step
+      setCurrentStep(2)
     },
   })
 }

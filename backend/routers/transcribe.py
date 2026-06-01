@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Form, Request, HTTPException
 import shutil
 import os
 import asyncio
-from models.schemas import TranscribeResponse
+from models.schemas import TranscribeResponse, TranscriptSegment
 from modules.audio_handler import (
     convert_to_wav,
     get_audio_duration,
@@ -10,34 +10,39 @@ from modules.audio_handler import (
     is_audio_processing_error,
     FFMPEG_SETUP_HINT,
 )
-from modules.openai_transcriber import SUPPORTED_EXTENSIONS
+from modules.openai_transcriber import (
+    SUPPORTED_EXTENSIONS,
+    FileTooLargeError,
+    RateLimitExceededError,
+)
 from modules.preprocessor import clean_transcript, count_words
 from config import OPENAI_ENABLED
 import uuid
 
 router = APIRouter()
 
+
 @router.post("/transcribe", response_model=TranscribeResponse)
 async def transcribe_audio(
     request: Request,
     file: UploadFile = File(...),
     model_size: str = Form("base"),
-    language: str = Form(None)
+    language: str = Form(None),
 ):
     _ensure_ffmpeg()
     language = language or None
 
     temp_dir = "temp"
     os.makedirs(temp_dir, exist_ok=True)
-    
+
     file_ext = (file.filename.split(".")[-1] if file.filename else "bin").lower()
     temp_file = os.path.join(temp_dir, f"{uuid.uuid4()}.{file_ext}")
     wav_path = None
-    
+
     try:
         with open(temp_file, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        
+
         duration = await asyncio.to_thread(get_audio_duration, temp_file)
 
         if OPENAI_ENABLED and file_ext in SUPPORTED_EXTENSIONS:
@@ -45,19 +50,29 @@ async def transcribe_audio(
         else:
             wav_path = await asyncio.to_thread(convert_to_wav, temp_file)
             audio_path = wav_path
-        
+
         transcriber = request.app.state.transcriber
         result = await asyncio.to_thread(transcriber.transcribe, audio_path, language)
-        
+
         cleaned_text = clean_transcript(result["text"])
-        
+        segments = [
+            TranscriptSegment(**s)
+            for s in result.get("segments", [])
+            if s.get("text")
+        ]
+
         return TranscribeResponse(
             transcript=cleaned_text,
             word_count=count_words(cleaned_text),
             duration_seconds=duration,
-            language_detected=result["language"]
+            language_detected=result["language"],
+            segments=segments,
         )
-        
+
+    except FileTooLargeError as e:
+        raise HTTPException(status_code=413, detail=str(e))
+    except RateLimitExceededError as e:
+        raise HTTPException(status_code=429, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
@@ -74,4 +89,4 @@ async def transcribe_audio(
             if wav_path and os.path.exists(wav_path):
                 os.remove(wav_path)
         except Exception as cleanup_error:
-            print(f"Cleanup error (likely file still in use): {cleanup_error}")
+            print(f"Cleanup error: {cleanup_error}")

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 
-export const useAudioRecorder = () => {
+export const useAudioRecorder = (onError) => {
   const [isRecording, setIsRecording] = useState(false)
   const [audioBlob, setAudioBlob] = useState(null)
   const mediaRecorder = useRef(null)
@@ -25,14 +25,14 @@ export const useAudioRecorder = () => {
       setIsRecording(true)
     } catch (err) {
       console.error('Failed to start recording', err)
-      alert('Could not access microphone')
+      onError?.('Could not access microphone. Please allow microphone permissions.')
     }
   }
 
   const stopRecording = () => {
     if (mediaRecorder.current && isRecording) {
       mediaRecorder.current.stop()
-      mediaRecorder.current.stream.getTracks().forEach(track => track.stop())
+      mediaRecorder.current.stream.getTracks().forEach((track) => track.stop())
       setIsRecording(false)
     }
   }

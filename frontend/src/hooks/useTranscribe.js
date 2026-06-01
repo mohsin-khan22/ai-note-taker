@@ -11,11 +11,11 @@ export const useTranscribe = () => {
     mutationFn: transcribeAudio,
     onMutate: () => {
       setErrorMessage(null)
-      setCurrentStep(1) // Transcribing
+      setCurrentStep(1)
     },
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.transcription.all, data)
-      setCurrentStep(2) // Ready for summarization (or next step)
+      setCurrentStep(2)
     },
     onError: (error) => {
       setErrorMessage(error.message)

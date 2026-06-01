@@ -1,18 +1,55 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useState } from 'react'
 import { Upload, FileAudio, X } from 'lucide-react'
 import { useMeetingStore } from '../store/meetingStore'
+import { useToast } from '../context/ToastContext'
 import { motion, AnimatePresence } from 'framer-motion'
+
+const MAX_BYTES = 25 * 1024 * 1024
 
 const AudioUploader = () => {
   const { audioFile, setAudioFile } = useMeetingStore()
+  const { toast } = useToast()
+  const [isDragging, setIsDragging] = useState(false)
+
+  const validateAndSet = useCallback(
+    (file) => {
+      if (!file) return
+      if (!file.type.startsWith('audio/') && !file.name.match(/\.(mp3|wav|m4a|webm|ogg|flac|mp4)$/i)) {
+        toast('Please upload a valid audio file', 'error')
+        return
+      }
+      if (file.size > MAX_BYTES) {
+        toast('File exceeds 25 MB limit', 'error')
+        return
+      }
+      setAudioFile(file)
+      toast('Audio file ready', 'success', 2000)
+    },
+    [setAudioFile, toast]
+  )
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0]
-    if (file && file.type.startsWith('audio/')) {
-      setAudioFile(file)
-    } else {
-      alert('Please upload a valid audio file')
-    }
+    validateAndSet(e.target.files[0])
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    validateAndSet(file)
   }
 
   const clearFile = () => setAudioFile(null)
@@ -27,13 +64,26 @@ const AudioUploader = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
           >
-            <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group">
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <Upload className="w-12 h-12 text-muted group-hover:text-primary transition-colors mb-3" />
+            <label
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-xl cursor-pointer transition-all group ${
+                isDragging
+                  ? 'border-primary bg-primary/10 scale-[1.02]'
+                  : 'border-border hover:border-primary/50 hover:bg-primary/5'
+              }`}
+            >
+              <div className="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none">
+                <Upload
+                  className={`w-12 h-12 mb-3 transition-colors ${
+                    isDragging ? 'text-primary' : 'text-muted group-hover:text-primary'
+                  }`}
+                />
                 <p className="mb-2 text-sm text-slate-200">
                   <span className="font-bold">Click to upload</span> or drag and drop
                 </p>
-                <p className="text-xs text-muted">MP3, WAV, M4A (Max 25MB)</p>
+                <p className="text-xs text-muted">MP3, WAV, M4A, WebM (Max 25MB)</p>
               </div>
               <input type="file" className="hidden" accept="audio/*" onChange={handleFileChange} />
             </label>
@@ -61,6 +111,7 @@ const AudioUploader = () => {
             <button
               onClick={clearFile}
               className="p-2 hover:bg-error/10 text-muted hover:text-error rounded-full transition-colors"
+              aria-label="Remove file"
             >
               <X className="w-5 h-5" />
             </button>

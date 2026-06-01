@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routers import transcribe, summarize, export
+from routers import transcribe, summarize, export, process, jobs
 from modules.audio_handler import get_ffmpeg_path
+from modules.openai_transcriber import MAX_FILE_BYTES, SUPPORTED_EXTENSIONS
 from config import OPENAI_ENABLED
 import uvicorn
 
@@ -53,8 +54,11 @@ app.add_middleware(
 app.include_router(transcribe.router, prefix="/api", tags=["transcription"])
 app.include_router(summarize.router, prefix="/api", tags=["summarization"])
 app.include_router(export.router, prefix="/api", tags=["export"])
+app.include_router(process.router, prefix="/api", tags=["process"])
+app.include_router(jobs.router, prefix="/api", tags=["jobs"])
 
 @app.get("/health")
+@app.get("/api/health")
 async def health_check():
     ffmpeg_path = get_ffmpeg_path()
     provider = getattr(app.state, "ai_provider", "unknown")
@@ -65,6 +69,14 @@ async def health_check():
         "openai_enabled": provider == "openai",
         "ffmpeg_available": ffmpeg_path is not None,
         "ffmpeg_path": ffmpeg_path,
+        "max_upload_bytes": MAX_FILE_BYTES,
+        "supported_formats": sorted(SUPPORTED_EXTENSIONS),
+        "features": {
+            "entities_in_export": True,
+            "transcript_segments": True,
+            "summary_templates": True,
+            "async_process": True,
+        },
     }
 
 if __name__ == "__main__":

@@ -5,22 +5,33 @@ export const useMeetingStore = create((set) => ({
   audioFile: null,
   modelSize: 'base',
   summaryLength: 'medium',
+  summaryType: 'general',
+  customInstructions: '',
   language: '',
-  isRecording: false,
+  editedTranscript: '',
+  pipelinePhase: null,
+  currentMeetingId: null,
   errorMessage: null,
 
   setCurrentStep: (step) => set({ currentStep: step }),
   setAudioFile: (file) => set({ audioFile: file }),
   setModelSize: (size) => set({ modelSize: size }),
   setSummaryLength: (len) => set({ summaryLength: len }),
+  setSummaryType: (type) => set({ summaryType: type }),
+  setCustomInstructions: (text) => set({ customInstructions: text }),
   setLanguage: (lang) => set({ language: lang }),
-  setIsRecording: (bool) => set({ isRecording: bool }),
+  setEditedTranscript: (text) => set({ editedTranscript: text }),
+  setPipelinePhase: (phase) => set({ pipelinePhase: phase }),
+  setCurrentMeetingId: (id) => set({ currentMeetingId: id }),
   setErrorMessage: (msg) => set({ errorMessage: msg }),
-  
-  reset: () => set({
-    currentStep: 0,
-    audioFile: null,
-    isRecording: false,
-    errorMessage: null,
-  })
+
+  reset: () =>
+    set({
+      currentStep: 0,
+      audioFile: null,
+      editedTranscript: '',
+      pipelinePhase: null,
+      currentMeetingId: null,
+      errorMessage: null,
+    }),
 }))
